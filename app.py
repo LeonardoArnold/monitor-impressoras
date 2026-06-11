@@ -24,7 +24,7 @@ def carregar():
     return []
 
 def salvar(lista):
-    with open(ARQUIVO, "w", encoding="utf-8") as f:
+    with open(ARQUIVO, "w", encoding="utf-8-sig") as f:
         json.dump(lista, f, ensure_ascii=False, indent=2)
 
 def ip_valido(ip):
@@ -118,4 +118,5 @@ def _abrir_painel():
 if __name__ == "__main__":
     threading.Timer(1.5, _abrir_painel).start()
     app.run(host="0.0.0.0", port=5000, debug=False)
+
 
