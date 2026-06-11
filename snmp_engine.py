@@ -305,6 +305,8 @@ def consultar_impressora(local, ip, senha="", community=COMMUNITY, timeout=TIMEO
         res["toner"]  = toner
         res["tambor"] = tambor
         if http_erro == "Senha incorreta":
+            res["toner"] = None
+            res["tambor"] = None
             res["aviso"] = "Senha incorreta â€” clique em ðŸ”‘ para corrigir"
         elif http_erro == "sem_senha":
             res["aviso"] = "Informe a senha para ver o toner"
