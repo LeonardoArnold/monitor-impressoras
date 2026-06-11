@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Suprimentos · Impressoras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EBEEF2;--surface:#fff;--ink:#16202B;--ink-soft:#5A6B7B;
+    --line:#E3E8ED;--accent:#0F6E6B;
+    --ok:#2E9E6B;--warn:#E3A008;--danger:#DB4747;--offline:#9AA7B4;
+    --shadow:0 1px 2px rgba(22,32,43,.06),0 6px 20px rgba(22,32,43,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace}
+
+  /* ── header ── */
+  header{background:var(--surface);border-bottom:1px solid var(--line);
+    padding:18px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+  .dot{width:34px;height:34px;border-radius:9px;flex:none;
+    background:linear-gradient(160deg,var(--accent),#0a4f4d);
+    display:grid;place-items:center;color:#fff;font-weight:700;font-size:18px}
+  header h1{font-size:17px;margin:0;font-weight:600;letter-spacing:-.01em}
+  header p{margin:0;font-size:12.5px;color:var(--ink-soft)}
+  .updated{font-size:12px;color:var(--ink-soft)}
+
+  /* ── buttons ── */
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);border-radius:9px;
+    padding:9px 15px;font-weight:500;transition:.15s}
+  button:hover{border-color:#cdd5dd;background:#f7f9fb}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{background:#0c5a58}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  button:disabled{opacity:.5;cursor:not-allowed}
+
+  main{max-width:1180px;margin:0 auto;padding:24px}
+
+  /* ── barra adicionar ── */
+  .addbar{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);padding:14px 16px;margin-bottom:22px;
+    display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+  .addbar label{font-size:12px;color:var(--ink-soft);font-weight:500;
+    display:block;margin-bottom:4px}
+  .addbar .field{display:flex;flex-direction:column}
+  .addbar input{font:inherit;border:1px solid var(--line);border-radius:9px;
+    padding:9px 12px;background:#fbfcfd}
+  .addbar input.f-local{min-width:190px}
+  .addbar input.f-ip{min-width:155px}
+  .addbar input.f-senha{min-width:145px}
+  .addbar input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+  .formerr{color:var(--danger);font-size:12.5px;width:100%;margin:6px 0 0}
+
+  /* ── grade ── */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+
+  /* ── card ── */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);padding:0;position:relative;
+    transition:transform .18s,box-shadow .18s;overflow:hidden}
+  .card:hover{transform:translateY(-2px);
+    box-shadow:0 2px 4px rgba(22,32,43,.08),0 12px 28px rgba(22,32,43,.10)}
+  .card.offline{opacity:.72}
+
+  /* banner de aviso/erro no topo do card */
+  .card-banner{
+    display:none;padding:7px 12px;font-size:12px;font-weight:600;
+    align-items:center;gap:6px;
+  }
+  .card-banner.warn{display:flex;background:#fff8e6;color:#92600a;border-bottom:1px solid #fde8a0}
+  .card-banner.err {display:flex;background:#fdf3f3;color:#9b2626;border-bottom:1px solid #f5c6c6}
+  .card-banner svg{flex:none}
+
+  .card-body{padding:14px 14px 14px}
+  .card .head{margin-bottom:12px;padding-right:52px}
+  .card .name{font-weight:600;font-size:14.5px;line-height:1.25}
+  .card .ip{font-size:12px;color:var(--ink-soft);margin-top:2px}
+
+  /* botoes flutuantes do card */
+  .card-actions{position:absolute;top:10px;right:8px;display:flex;gap:4px;
+    opacity:0;transition:.15s}
+  .card:hover .card-actions,.card-actions:focus-within{opacity:1}
+  .card-actions button{
+    width:28px;height:28px;padding:0;border-radius:7px;
+    color:var(--ink-soft);font-size:14px;line-height:1;
+    display:grid;place-items:center;
+  }
+  .btn-senha:hover{color:var(--accent);border-color:#b3dada;background:#f0fafa}
+  .btn-del:hover{color:var(--danger);border-color:#f1c6c6;background:#fdf3f3}
+
+  /* ── gauges ── */
+  .gauges{display:flex;gap:18px;align-items:flex-end;justify-content:center;padding:4px 0 2px}
+  .gauge{display:flex;flex-direction:column;align-items:center;gap:7px;width:64px}
+  .gauge .glabel{font-size:11px;color:var(--ink-soft);font-weight:500;
+    text-transform:uppercase;letter-spacing:.04em}
+  .cart{position:relative;width:34px;height:78px}
+  .cart .cap{position:absolute;top:-6px;left:9px;width:16px;height:6px;
+    border-radius:3px 3px 0 0;background:#cfd7de}
+  .cart .body{position:absolute;inset:0;border-radius:5px;overflow:hidden;
+    background:#eef1f4;border:1px solid #dde3e9}
+  .cart .fill{position:absolute;left:0;right:0;bottom:0;height:0%;
+    transition:height .6s cubic-bezier(.4,0,.2,1)}
+  .cart .pct{position:absolute;inset:0;display:grid;place-items:center;
+    font-size:12.5px;font-weight:600;
+    font-family:'IBM Plex Mono',monospace;
+    text-shadow:0 1px 2px rgba(255,255,255,.7)}
+  .gauge .val{font-size:12px;color:var(--ink-soft)}
+
+  /* status badge */
+  .status{margin-top:14px;display:flex;align-items:center;gap:7px;
+    font-size:12.5px;font-weight:500}
+  .status .pip{width:8px;height:8px;border-radius:50%;flex:none}
+  .s-ok   {color:var(--ok)}   .s-ok    .pip{background:var(--ok)}
+  .s-warn {color:var(--warn)} .s-warn  .pip{background:var(--warn)}
+  .s-danger{color:var(--danger)}.s-danger .pip{background:var(--danger)}
+  .s-offline{color:var(--offline)}.s-offline .pip{background:var(--offline)}
+
+  /* ── modal de senha ── */
+  .overlay{position:fixed;inset:0;background:rgba(22,32,43,.4);
+    display:none;place-items:center;z-index:100;padding:20px}
+  .overlay.open{display:grid}
+  .modal{background:var(--surface);border-radius:16px;padding:24px;
+    max-width:380px;width:100%;box-shadow:0 24px 64px rgba(22,32,43,.25)}
+  .modal h2{margin:0 0 6px;font-size:16px}
+  .modal p{margin:0 0 16px;font-size:13px;color:var(--ink-soft)}
+  .modal label{font-size:12px;font-weight:500;color:var(--ink-soft);
+    display:block;margin-bottom:5px}
+  .modal input{width:100%;font:inherit;border:1px solid var(--line);
+    border-radius:9px;padding:10px 12px;margin-bottom:16px}
+  .modal input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+  .modal .actions{display:flex;gap:8px;justify-content:flex-end}
+  .modal-err{color:var(--danger);font-size:12.5px;margin:-10px 0 12px}
+
+  /* ── estados vazios / loading ── */
+  .empty,.loading{grid-column:1/-1;text-align:center;padding:56px 20px;
+    color:var(--ink-soft);background:var(--surface);
+    border:1px dashed var(--line);border-radius:14px}
+  .empty strong{color:var(--ink);display:block;margin-bottom:6px;font-size:15px}
+  .spin{width:22px;height:22px;border:2.5px solid var(--line);
+    border-top-color:var(--accent);border-radius:50%;
+    animation:spin .8s linear infinite;margin:0 auto 12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media(max-width:560px){
+    header{padding:14px 16px}main{padding:16px}
+    .addbar input{min-width:0;width:100%}.addbar .field{flex:1 1 100%}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="dot">⬗</div>
+    <div>
+      <h1>Painel de Suprimentos</h1>
+      <p>Toner e cilindro das impressoras da rede</p>
+    </div>
+  </div>
+  <span class="updated" id="updated"></span>
+  <button onclick="abrirModalTodas()">Senha p/ todas</button>
+  <button class="primary" id="btnRefresh" onclick="carregarStatus()">Atualizar</button>
+</header>
+
+<main>
+  <!-- barra de adicionar -->
+  <div class="addbar">
+    <div class="field">
+      <label for="inLocal">Local</label>
+      <input id="inLocal" class="f-local" placeholder="Ex.: Recepção 03" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="inIp">Endereço IP</label>
+      <input id="inIp" class="f-ip mono" placeholder="192.168.200.100" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="inSenha">Senha da impressora</label>
+      <input id="inSenha" class="f-senha" type="password" placeholder="Senha da impressora"
+             autocomplete="new-password"
+             onkeydown="if(event.key==='Enter')adicionar()">
+    </div>
+    <button class="primary" onclick="adicionar()">Adicionar</button>
+    <p class="formerr" id="formErr"></p>
+  </div>
+
+  <div class="grid" id="grid">
+    <div class="loading"><div class="spin"></div>Consultando impressoras…</div>
+  </div>
+</main>
+
+<!-- modal de editar senha -->
+<div class="overlay" id="overlay" onclick="fecharModal(event)">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h2>Senha da impressora</h2>
+    <p id="modalDesc">Informe a senha de acesso à interface web desta impressora.</p>
+    <label for="modalSenha">Senha</label>
+    <input id="modalSenha" type="password" placeholder="Digite a senha"
+           onkeydown="if(event.key==='Enter')salvarSenha()">
+    <p class="modal-err" id="modalErr"></p>
+    <div class="actions">
+      <button onclick="fecharModal()">Cancelar</button>
+      <button class="primary" onclick="salvarSenha()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LIM = { toner:{danger:15,warn:30}, tambor:{danger:10,warn:20} };
+let _ipModal = null;
+
+const esc = s => (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cor = (pct,lim) =>
+  pct==null?'var(--offline)':pct<=lim.danger?'var(--danger)':pct<=lim.warn?'var(--warn)':'var(--ok)';
+
+function gauge(label, pct, status, lim){
+  const c = cor(pct,lim);
+  const h = pct!=null?pct:0;
+  const txt = pct!=null ? pct+'%' : (status||'—');
+  const numCor = (pct!=null && pct>50) ? '#fff' : 'var(--ink)';
+  return `<div class="gauge">
+    <span class="glabel">${label}</span>
+    <div class="cart">
+      <div class="cap"></div>
+      <div class="body"><div class="fill" style="height:${h}%;background:${c}"></div></div>
+      <div class="pct" style="color:${numCor}">${pct!=null?pct:''}</div>
+    </div>
+    <span class="val mono">${txt}</span>
+  </div>`;
+}
+
+function card(p){
+  let offCls='', pipCls='s-ok', msg='Tudo certo';
+  let bannerCls='', bannerTxt='';
+
+  if(!p.online){
+    offCls='offline'; pipCls='s-offline'; msg=p.erro||'Sem resposta';
+  } else {
+    // aviso de senha
+    if(p.aviso){
+      if(p.aviso.toLowerCase().includes('incorreta')){
+        bannerCls='err';
+        bannerTxt=`<svg width="14" height="14" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+                 +`Senha incorreta — clique em 🔑 para corrigir`;
+      } else {
+        bannerCls='warn';
+        bannerTxt=`<svg width="14" height="14" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+                 +`Toner indisponível — clique em 🔑 para informar a senha`;
+      }
+    }
+
+    // status geral
+    const t=p.toner_pct, d=p.tambor_pct;
+    if(d!=null && d<=LIM.tambor.danger){ pipCls='s-warn'; msg='Trocar cilindro em breve'; }
+    if(t!=null && t<=LIM.toner.danger){ pipCls='s-danger'; msg='Trocar o toner'; }
+    else if(t!=null && t<=LIM.toner.warn){ pipCls='s-warn'; msg='Toner ficando baixo'; }
+    else if(t==null && !p.aviso){ msg='Toner OK'; }
+  }
+
+  const div = document.createElement('div');
+  div.className = 'card' + (offCls?' '+offCls:'');
+  div.innerHTML = `
+    <div class="card-banner ${bannerCls}">${bannerTxt}</div>
+    <div class="card-body">
+      <div class="card-actions">
+        <button class="btn-senha" title="Editar senha" onclick="abrirModal('${esc(p.ip)}','${esc(p.local)}')">🔑</button>
+        <button class="btn-del"   title="Remover"      onclick="remover('${esc(p.ip)}')">×</button>
+      </div>
+      <div class="head">
+        <div class="name">${esc(p.local)}</div>
+        <div class="ip mono">${esc(p.ip)}</div>
+      </div>
+      <div class="gauges">
+        ${gauge('Toner',    p.toner_pct,  p.toner_status,  LIM.toner)}
+        ${gauge('Cilindro', p.tambor_pct, p.tambor_status, LIM.tambor)}
+      </div>
+      <div class="status ${pipCls}"><span class="pip"></span>${esc(msg)}</div>
+    </div>`;
+  return div;
+}
+
+// ── API calls ──────────────────────────────────────────────────────────
+async function carregarStatus(){
+  const grid=document.getElementById('grid');
+  const btn=document.getElementById('btnRefresh');
+  btn.disabled=true; btn.textContent='Consultando…';
+  grid.innerHTML='<div class="loading"><div class="spin"></div>Consultando impressoras…</div>';
+  try{
+    const r=await fetch('/api/status');
+    const lista=await r.json();
+    grid.innerHTML='';
+    if(!lista.length){
+      grid.innerHTML='<div class="empty"><strong>Nenhuma impressora cadastrada</strong>Adicione o primeiro IP no campo acima.</div>';
+    } else {
+      lista.forEach(p=>grid.appendChild(card(p)));
+    }
+    document.getElementById('updated').textContent=
+      'Atualizado em '+new Date().toLocaleString('pt-BR');
+  }catch{
+    grid.innerHTML='<div class="empty"><strong>Não consegui falar com o servidor</strong>Verifique se o programa está rodando e recarregue a página.</div>';
+  }finally{
+    btn.disabled=false; btn.textContent='Atualizar';
+  }
+}
+
+function ipValido(ip){
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(ip) &&
+         ip.split('.').every(n=>+n>=0&&+n<=255);
+}
+
+async function adicionar(){
+  const local=document.getElementById('inLocal').value.trim();
+  const ip=document.getElementById('inIp').value.trim();
+  const senha=document.getElementById('inSenha').value.trim();
+  const err=document.getElementById('formErr');
+  err.textContent='';
+  if(!ipValido(ip)){err.textContent='Digite um IP válido, ex.: 192.168.200.100';return;}
+  const r=await fetch('/api/impressoras',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({local,ip,senha})
+  });
+  if(!r.ok){const j=await r.json();err.textContent=j.erro||'Erro ao adicionar.';return;}
+  document.getElementById('inLocal').value='';
+  document.getElementById('inIp').value='';
+  document.getElementById('inSenha').value='';
+  carregarStatus();
+}
+
+async function remover(ip){
+  if(!confirm('Remover esta impressora da lista?'))return;
+  await fetch('/api/impressoras/'+ip,{method:'DELETE'});
+  carregarStatus();
+}
+
+// ── modal de senha ─────────────────────────────────────────────────────
+function abrirModal(ip, local){
+  _ipModal=ip;
+  document.getElementById('modalDesc').textContent=
+    'Senha de acesso à interface web de: '+local+' ('+ip+')';
+  document.getElementById('modalSenha').value='';
+  document.getElementById('modalErr').textContent='';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('modalSenha').focus(),50);
+}
+
+function abrirModalTodas(){
+  _ipModal='__TODAS__';
+  document.getElementById('modalDesc').textContent=
+    'Esta senha será aplicada a TODAS as impressoras da lista.';
+  document.getElementById('modalSenha').value='';
+  document.getElementById('modalErr').textContent='';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('modalSenha').focus(),50);
+}
+
+function fecharModal(e){
+  if(e&&e.target!==document.getElementById('overlay'))return;
+  document.getElementById('overlay').classList.remove('open');
+  _ipModal=null;
+}
+
+async function salvarSenha(){
+  const senha=document.getElementById('modalSenha').value.trim();
+  const errEl=document.getElementById('modalErr');
+  errEl.textContent='';
+  if(!_ipModal)return;
+  let r;
+  if(_ipModal==='__TODAS__'){
+    r=await fetch('/api/senha-todas',{
+      method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({senha})
+    });
+  } else {
+    r=await fetch('/api/impressoras/'+_ipModal+'/senha',{
+      method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({senha})
+    });
+  }
+  if(!r.ok){errEl.textContent='Erro ao salvar.';return;}
+  document.getElementById('overlay').classList.remove('open');
+  _ipModal=null;
+  carregarStatus();
+}
+
+carregarStatus();
+</script>
+</body>
+</html>

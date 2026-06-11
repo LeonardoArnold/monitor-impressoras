@@ -1,0 +1,7 @@
+﻿__pycache__/
+*.pyc
+impressoras.json
+.DS_Store
+Thumbs.db
+.vscode/
+*.log

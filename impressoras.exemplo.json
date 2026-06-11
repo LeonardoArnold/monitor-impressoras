@@ -1,0 +1,4 @@
+[
+  { "local": "Exemplo - Recepção",  "ip": "192.168.1.100", "senha": "" },
+  { "local": "Exemplo - TI",        "ip": "192.168.1.101", "senha": "" }
+]
