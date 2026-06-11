@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
-app.py — CAMADA DE LOGICA
+app.py â€” CAMADA DE LOGICA
 =========================
 Servidor Flask. Serve o painel e responde a API.
 A senha das impressoras e salva junto com cada IP no impressoras.json.
@@ -19,7 +19,7 @@ IP_RE   = re.compile(r"^\d{1,3}(\.\d{1,3}){3}$")
 
 def carregar():
     if os.path.exists(ARQUIVO):
-        with open(ARQUIVO, encoding="utf-8") as f:
+        with open(ARQUIVO, encoding="utf-8-sig") as f:
             return json.load(f)
     return []
 
@@ -36,7 +36,7 @@ def index():
     return render_template("index.html")
 
 
-# ── API impressoras ───────────────────────────────────────────────────────
+# â”€â”€ API impressoras â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route("/api/impressoras", methods=["GET"])
 def listar():
     # Nao expoe a senha pro frontend
@@ -49,10 +49,10 @@ def adicionar():
     ip    = (d.get("ip")    or "").strip()
     senha = (d.get("senha") or "").strip()
     if not ip_valido(ip):
-        return jsonify({"erro": "IP inválido. Use o formato 192.168.0.10"}), 400
+        return jsonify({"erro": "IP invÃ¡lido. Use o formato 192.168.0.10"}), 400
     lista = carregar()
     if any(p["ip"] == ip for p in lista):
-        return jsonify({"erro": "Esse IP já está cadastrado"}), 400
+        return jsonify({"erro": "Esse IP jÃ¡ estÃ¡ cadastrado"}), 400
     lista.append({"local": local or ip, "ip": ip, "senha": senha})
     salvar(lista)
     return jsonify([{"local":p["local"],"ip":p["ip"]} for p in lista])
@@ -86,7 +86,7 @@ def senha_todas():
     return jsonify({"ok": True, "total": len(lista)})
 
 
-# ── API status (consulta SNMP + HTTP) ────────────────────────────────────
+# â”€â”€ API status (consulta SNMP + HTTP) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def _para_json(r):
     t, d = r["toner"], r["tambor"]
     return {
@@ -110,7 +110,7 @@ def status():
     return jsonify([_para_json(r) for r in resultados])
 
 
-# ── Inicia ────────────────────────────────────────────────────────────────
+# â”€â”€ Inicia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def _abrir_painel():
     import webbrowser
     webbrowser.open("http://localhost:5000")
@@ -118,3 +118,4 @@ def _abrir_painel():
 if __name__ == "__main__":
     threading.Timer(1.5, _abrir_painel).start()
     app.run(host="0.0.0.0", port=5000, debug=False)
+
