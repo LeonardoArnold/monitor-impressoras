@@ -135,6 +135,7 @@ Desafios técnicos encontrados:
 - [ ] Alerta automático por e-mail quando toner cair abaixo do limite
 - [ ] Agrupamento de impressoras por setor
 - [ ] Atualização automática periódica do painel
+- [ ] Investigar diferença de ±1% no cilindro entre SNMP e página web
 
 ---
 
