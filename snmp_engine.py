@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
-snmp_engine.py — CAMADA DE COLETA DE DADOS
+snmp_engine.py â€” CAMADA DE COLETA DE DADOS
 ==========================================
 Fluxo real confirmado contra Brother DCP-L5512DN:
 
-  1. SNMP (UDP 161) — sem senha
+  1. SNMP (UDP 161) â€” sem senha
      Cilindro: retorna % corretamente.
      Toner: retorna -3 ("tem toner, sem % numerica via SNMP").
 
-  2. Login HTTPS (urllib + cookiejar) — para obter o % do toner:
-     a. GET /general/information.html  →  impressora redireciona para
+  2. Login HTTPS (urllib + cookiejar) â€” para obter o % do toner:
+     a. GET /general/information.html  â†’  impressora redireciona para
         /etc/timeouterror.html?url=...  (pagina de login, so campo senha)
      b. Extrai o campo hidden "url" ou "loginurl" do formulario
      c. POST /etc/mnt_info.html  com  B_Pwd=SENHA & url=... & loginurl=...
@@ -29,7 +29,7 @@ OID_SUPPLY_MAX  = "1.3.6.1.2.1.43.11.1.1.8.1"
 OID_SUPPLY_LVL  = "1.3.6.1.2.1.43.11.1.1.9.1"
 
 
-# ── SNMP (BER encoding) ───────────────────────────────────────────────────
+# â”€â”€ SNMP (BER encoding) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def _encode_length(n):
     if n < 0x80: return bytes([n])
     out = b""
@@ -111,7 +111,7 @@ def snmp_walk(host, base_oid, community=COMMUNITY, timeout=TIMEOUT):
     return results
 
 
-# ── SNMP alto nivel ───────────────────────────────────────────────────────
+# â”€â”€ SNMP alto nivel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def get_supplies(host, community=COMMUNITY, timeout=TIMEOUT):
     def walk_map(base):
         return {oid.split(".")[-1]: val
@@ -142,7 +142,7 @@ def _classificar(supplies):
 
 
 
-# ── HTTP com login (le o formulario automaticamente) ──────────────────────
+# â”€â”€ HTTP com login (le o formulario automaticamente) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def _ssl_ctx():
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
@@ -287,10 +287,14 @@ def _corrigir_com_http(ip, toner, tambor, senha):
     return toner, tambor, None
 
 
-# ── Funcao principal ──────────────────────────────────────────────────────
+# â”€â”€ Funcao principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def consultar_impressora(local, ip, senha="", community=COMMUNITY, timeout=TIMEOUT):
     res = {"local":local,"ip":ip,"online":False,
            "toner":None,"tambor":None,"erro":"","aviso":""}
+    if not senha:
+        res["online"] = True
+        res["aviso"] = "Informe a senha para ver os niveis"
+        return res
     try:
         supplies = get_supplies(ip, community, timeout)
         if not supplies:
@@ -301,13 +305,14 @@ def consultar_impressora(local, ip, senha="", community=COMMUNITY, timeout=TIMEO
         res["toner"]  = toner
         res["tambor"] = tambor
         if http_erro == "Senha incorreta":
-            res["aviso"] = "Senha incorreta — clique em 🔑 para corrigir"
+            res["aviso"] = "Senha incorreta â€” clique em ðŸ”‘ para corrigir"
         elif http_erro == "sem_senha":
             res["aviso"] = "Informe a senha para ver o toner"
         elif http_erro:
-            res["aviso"] = "Toner indisponível (%s)" % http_erro
+            res["aviso"] = "Toner indisponÃ­vel (%s)" % http_erro
     except socket.timeout:
         res["erro"] = "Sem resposta (SNMP desligado?)"
     except Exception as ex:
         res["erro"] = "Erro: %s" % ex
     return res
+
